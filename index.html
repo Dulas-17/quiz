@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+	<meta name="discription" content="Play this fun quiz game and test your knowledge! Answer riddles and quiz quitions to win exiting rewards. The first player to get all answers correct wins a prize,with the game resetting evry three days. "/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure Game</title>
+    <Style > 
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #e0f7fa; 
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    padding: 20px;
+    margin: 50px auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+}
+h1, h2, h3 {
+    color: #00796b; 
+}
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #00796b;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+	gab:15px;
+}
+button:hover {
+    background-color: #004d40; 
+}
+input[type="text"], input[type="number"], select {
+    padding: 10px;
+    width: 100%;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.timer {
+    margin: 20px 0;
+    font-size: 18px;
+}
+.prize {
+    color: green;
+    font-weight: bold;
+}
+.winner-notification {
+    color: red;
+    font-weight: bold;
+}
+</style >
+</head>
+<body>
+    <div class="container" id="welcome-screen">
+        <h1>Welcome to Quiz Adventure!</h1>
+        <p>Answer 10 riddles correctly and win the prize!</p>
+        <p>If someone else wins before you, A newgame will start after 3 days.</p>
+        <div id="winner-message" class="winner-notification" style="display:none;"></div>
+        <button id="start-game-btn" onclick="startGame()">Start Game</button>
+    </div>
+
+    <div class="container" id="player-info" style="display:none;">
+        <h2>Enter your details:</h2>
+        <input type="text" id="name" placeholder="Enter your name" required><br>
+        <select id="gender" required>
+            <option value="" disabled selected>Select your gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">rather not say</option>
+        </select><br>
+        <input type="number" id="age" placeholder="Enter your age" required><br>
+        <button onclick="savePlayerInfo()">Submit</button>
+    </div>
+
+    <div class="container" id="question-container" style="display:none;">
+        <h2 id="question-text">Question will appear here</h2>
+        <div id="options">
+            <!-- Options will be dynamically inserted -->
+        </div>
+        <p class="timer">Time left: <span id="timer">30</span> seconds</p>
+    </div>
+
+    <div class="container" id="end-screen" style="display:none;">
+        <h1 id="end-message">Game Over!</h1>
+        <div id="prize" style="display:none;">
+            <h2>Congratulations! You have found the Easter Egg!</h2>
+            <p class="prize">Your Airtime Code: <span id="airtime-code">XXXX-XXXX-XXXX</span></p>
+        </div>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+
+    <script>
+let questions = [
+    { q: "What has to be broken before you can use it?", options: ["An egg", "A door", "A bottle", "A glass"], correct: 0 },
+    { q: "I’m tall when I’m young, and I’m short when I’m old. What am I?", options: ["A person", "A tree", "A candle", "A pencil"], correct: 2 },
+    { q: "What month of the year has 28 days?", options: ["February", "All of them", "January", "March"], correct: 1 },
+    { q: "What is full of holes but still holds water?", options: ["A net", "A sponge", "A basket", "A pipe"], correct: 1 },
+    { q: "What question can you never answer yes to?", options: ["Are you asleep?", "Are you okay?", "Do you know?", "Is it true?"], correct: 0 },
+    { q: "What is always in front of you but can’t be seen?", options: ["Your future", "The air", "A wall", "Time"], correct: 0 },
+    { q: "There’s a one-story house in which everything is yellow. What color are the stairs?", options: ["Yellow", "Blue", "There are no stairs", "Green"], correct: 2 },
+    { q: "What can you break, even if you never pick it up or touch it?", options: ["A promise", "A heart", "Glass", "A twig"], correct: 0 },
+    { q: "What goes up but never comes down?", options: ["A balloon", "Your age", "A kite", "Smoke"], correct: 1 },
+    { q: "The more of this there is, the less you see. What is it?", options: ["A mirror", "A shadow", "Darkness", "Light"], correct: 2 }
+];
+
+let player = { name: "", gender: "", age: 0 };
+let currentQuestion = 0;
+let timer;
+let airtimeCode = "*130*7467*xxxxxxxx#"; // Airtime prize code
+
+function startGame() {
+    const gameCooldown = localStorage.getItem('gameCooldown');
+    const winner = localStorage.getItem('winner');
+    const now = Date.now();
+
+    if (gameCooldown && now < gameCooldown) {
+        const winnerMessage = `The game has already been won by ${winner}. Please wait until the game restarts in 3 days.`;
+        document.getElementById('winner-message').textContent = winnerMessage;
+        document.getElementById('winner-message').style.display = 'block';
+        document.getElementById('start-game-btn').style.display = 'none'; // Hide start button
+    } else {
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('player-info').style.display = 'block';
+    }
+}
+
+function savePlayerInfo() {
+    player.name = document.getElementById('name').value;
+    player.gender = document.getElementById('gender').value;
+    player.age = parseInt(document.getElementById('age').value);
+
+    if (player.name && player.gender && player.age) {
+        localStorage.setItem('player', JSON.stringify(player));
+        document.getElementById('player-info').style.display = 'none';
+        startRiddles();
+    } else {
+        alert("Please fill in all fields.");
+    }
+}
+
+function startRiddles() {
+    document.getElementById('question-container').style.display = 'block';
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentQuestion >= questions.length) {
+        endGame(true);  // Player has completed all riddles
+        return;
+    }
+
+    const questionObj = questions[currentQuestion];
+    document.getElementById('question-text').textContent = questionObj.q;
+    let optionsHtml = '';
+    questionObj.options.forEach((option, index) => {
+        optionsHtml += `<button onclick="submitAnswer(${index})">${option}</button><br>`;
+    });
+    document.getElementById('options').innerHTML = optionsHtml;
+
+    startTimer();
+}
+
+function startTimer() {
+    let timeLeft = 30;
+    document.getElementById('timer').textContent = timeLeft;
+    timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            endGame(false);  // Player failed to answer in time
+        }
+    }, 1000);
+}
+
+function submitAnswer(selectedIndex) {
+    clearInterval(timer);
+    const questionObj = questions[currentQuestion];
+
+    if (selectedIndex === questionObj.correct) {
+        currentQuestion++;
+        loadQuestion();
+    } else {
+        endGame(false);  // Incorrect answer
+    }
+}
+
+function endGame(won) {
+    document.getElementById('question-container').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'block';
+
+    if (won) {
+        document.getElementById('end-message').textContent = "Congratulations, " + player.name + "! You have won!";
+        document.getElementById('prize').style.display = 'block';
+        document.getElementById('airtime-code').textContent = airtimeCode;
+        
+        // Store winner and set cooldown for the game
+        localStorage.setItem('winner', player.name);
+        localStorage.setItem('gameCooldown', Date.now() + (3 * 24 * 60 * 60 * 1000)); // 3 days
+    } else {
+        document.getElementById('end-message').textContent = "Game Over! Better luck next time!";
+    }
+}
+</script> 
+<footer>
+<p>Copy: 2024 Quiz Game. All rihgts reversed.</p>
+<p>Contact Us:<a href="mailto:dulas050817@gmail.com">dulas050817@gmail.com</a> 
+phone:<a href="tel:+27 657446487">+27 65 744 6487</a>
+</p>
+</footer>
+</body>
+</html>
